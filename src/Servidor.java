@@ -1,3 +1,11 @@
+
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -139,6 +147,27 @@ public class Servidor extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new Servidor().setVisible(true);
+                try{
+                    ServerSocket ss = new ServerSocket();
+                    Socket s = ss.accept();
+                    
+                    DataInputStream dins = new DataInputStream(s.getInputStream());
+                    DataOutputStream dous = new DataOutputStream(s.getOutputStream());
+                    
+                    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+                    
+                    String msgin="",msgout="";
+                    
+                    while(!msgin.equals("end")){
+                        msgin = dins.readUTF();
+                        msgout = br.readLine();
+                        dous.writeUTF(msgout);
+                        dous.flush();
+                    }
+                    s.close();
+                }catch(Exception e){
+                    
+                }
             }
         });
     }
