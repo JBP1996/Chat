@@ -1,3 +1,9 @@
+
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -12,6 +18,9 @@ public class Cliente extends javax.swing.JFrame {
     /**
      * Creates new form Cliente
      */
+    static Socket s;
+    static DataInputStream din;
+    static DataOutputStream dout;
     public Cliente() {
         initComponents();
     }
@@ -52,6 +61,11 @@ public class Cliente extends javax.swing.JFrame {
         jScrollPane1.setViewportView(conversa);
 
         Enviar.setText("Enviar");
+        Enviar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                EnviarActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout ChatLayout = new javax.swing.GroupLayout(Chat);
         Chat.setLayout(ChatLayout);
@@ -174,6 +188,17 @@ public class Cliente extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void EnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_EnviarActionPerformed
+        // TODO add your handling code here:
+        try{
+            String msgout="";
+            msgout = mensagem.getText().trim();
+            dout.writeUTF(msgout);
+        }catch(Exception e){
+            
+        }
+    }//GEN-LAST:event_EnviarActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -207,6 +232,26 @@ public class Cliente extends javax.swing.JFrame {
                 new Cliente().setVisible(true);
             }
         });
+        
+        try{
+            //SOcket --> ("IP",Porta)
+            s = new Socket("127.0.0.1",1120);
+
+            din = new DataInputStream(s.getInputStream());
+            dout = new DataOutputStream(s.getOutputStream());
+
+            //BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+            String msgin="";
+
+            while(!msgin.equals("end")){
+                msgin = din.readUTF();
+                conversa.setText("EU:\t"+msgin);
+            }
+            s.close();
+        }catch(Exception e){
+
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -214,7 +259,7 @@ public class Cliente extends javax.swing.JFrame {
     private javax.swing.JButton Enviar;
     private javax.swing.JPanel Principal;
     private javax.swing.JLabel bemvindo;
-    private javax.swing.JTextArea conversa;
+    private static javax.swing.JTextArea conversa;
     private javax.swing.JButton entrar;
     private javax.swing.JTextField ip1;
     private javax.swing.JLabel jLabel1;

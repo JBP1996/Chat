@@ -20,6 +20,10 @@ public class Servidor extends javax.swing.JFrame {
     /**
      * Creates new form Servidor
      */
+    static ServerSocket ss;
+    static Socket s;
+    static DataInputStream din;
+    static DataOutputStream dout;
     public Servidor(){
         initComponents();
     }
@@ -147,33 +151,40 @@ public class Servidor extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new Servidor().setVisible(true);
-                try{
-                    ServerSocket ss = new ServerSocket();
-                    Socket s = ss.accept();
-                    
-                    DataInputStream dins = new DataInputStream(s.getInputStream());
-                    DataOutputStream dous = new DataOutputStream(s.getOutputStream());
-                    
-                    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-                    
-                    String msgin="",msgout="";
-                    
-                    while(!msgin.equals("end")){
-                        msgin = dins.readUTF();
-                        msgout = br.readLine();
-                        dous.writeUTF(msgout);
-                        dous.flush();
-                    }
-                    s.close();
-                }catch(Exception e){
-                    
-                }
-            }
+            }       
         });
+        
+        String msgin="",msgout="";
+        
+        try{
+            ss = new ServerSocket(1201); // porta do Servidor
+            s = ss.accept();
+
+            din = new DataInputStream(s.getInputStream());
+            dout = new DataOutputStream(s.getOutputStream());
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+            
+
+            while(!msgin.equals("end")){
+                msgin = din.readUTF();
+                conexao.setText(conexao.getText()+"\n"+msgin);
+                
+                /*
+                msgout = br.readLine();
+                dout.writeUTF(msgout);
+                dout.flush();
+                */
+            }
+            s.close();
+        }catch(Exception e){
+
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTextArea conexao;
+    private static javax.swing.JTextArea conexao;
     private javax.swing.JButton iniciar;
     private javax.swing.JTextField ip;
     private javax.swing.JLabel jLabel1;
