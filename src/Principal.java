@@ -1,3 +1,6 @@
+
+import java.util.ArrayList;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -10,13 +13,15 @@
  */
 public class Principal extends javax.swing.JFrame {
     Servidor ser = new Servidor();
-    Cliente cli = new Cliente();
+    //Cliente cli = new Cliente();
+    ArrayList<Thread> arClientes;
     
     /**
      * Creates new form Principal
      */
     public Principal() {
         initComponents();
+        arClientes = new ArrayList<Thread>();
     }
 
     /**
@@ -78,7 +83,7 @@ public class Principal extends javax.swing.JFrame {
 
     private void clientebtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_clientebtnMouseClicked
         // TODO add your handling code here:
-        cli.setVisible(true);
+        new RunNovoCliente().start();
     }//GEN-LAST:event_clientebtnMouseClicked
 
     /**
@@ -120,4 +125,12 @@ public class Principal extends javax.swing.JFrame {
     private javax.swing.JButton clientebtn;
     private javax.swing.JButton servidorbtn;
     // End of variables declaration//GEN-END:variables
+
+    class RunNovoCliente extends Thread {
+        public void run() {
+            new Cliente().setVisible(true);
+            arClientes.add(this);
+            Cliente.THREAD = this.getId();
+        }
+    }
 }

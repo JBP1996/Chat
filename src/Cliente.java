@@ -2,7 +2,11 @@
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -18,11 +22,23 @@ public class Cliente extends javax.swing.JFrame {
     /**
      * Creates new form Cliente
      */
-    static Socket s;
-    static DataInputStream din;
+    public static long THREAD;
+    static Socket s ;
+    //static DataInputStream din;
     static DataOutputStream dout;
+    InputStream inStr;
+    static BufferedReader br;
+    String msgout="";
     public Cliente() {
         initComponents();
+        entrar.setEnabled(true);
+        sair.setEnabled(false);
+        enviar.setEnabled(false);
+        //CONTEUDO
+        ip.setEnabled(true);
+        portaServidor.setEnabled(true);
+        nome.setEnabled(true);
+        mensagem.setEnabled(false);
     }
 
     /**
@@ -40,15 +56,16 @@ public class Cliente extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         conversa = new javax.swing.JTextArea();
         mensagem = new javax.swing.JTextField();
-        Enviar = new javax.swing.JButton();
+        enviar = new javax.swing.JButton();
         Principal = new javax.swing.JPanel();
-        jTextField1 = new javax.swing.JTextField();
+        nome = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         entrar = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        jTextField2 = new javax.swing.JTextField();
-        ip1 = new javax.swing.JTextField();
+        portaServidor = new javax.swing.JTextField();
+        ip = new javax.swing.JTextField();
+        sair = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -58,12 +75,13 @@ public class Cliente extends javax.swing.JFrame {
 
         conversa.setColumns(20);
         conversa.setRows(5);
+        conversa.setEnabled(false);
         jScrollPane1.setViewportView(conversa);
 
-        Enviar.setText("Enviar");
-        Enviar.addActionListener(new java.awt.event.ActionListener() {
+        enviar.setText("Enviar");
+        enviar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                EnviarActionPerformed(evt);
+                enviarActionPerformed(evt);
             }
         });
 
@@ -78,7 +96,7 @@ public class Cliente extends javax.swing.JFrame {
                     .addGroup(ChatLayout.createSequentialGroup()
                         .addComponent(mensagem)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(Enviar)))
+                        .addComponent(enviar)))
                 .addContainerGap())
             .addGroup(ChatLayout.createSequentialGroup()
                 .addGap(182, 182, 182)
@@ -90,11 +108,11 @@ public class Cliente extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, ChatLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(bemvindo)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(ChatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(Enviar)
+                    .addComponent(enviar)
                     .addComponent(mensagem, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
@@ -102,53 +120,72 @@ public class Cliente extends javax.swing.JFrame {
         jLabel2.setText("Nome Utilizador:");
 
         entrar.setText("Entrar");
+        entrar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                entrarMouseClicked(evt);
+            }
+        });
 
         jLabel5.setText("IP Servidor:");
 
         jLabel4.setText("Porta Servidor:");
 
+        portaServidor.setText("5000");
+
+        ip.setText("127.0.0.1");
+
+        sair.setText("Sair");
+        sair.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                sairMouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout PrincipalLayout = new javax.swing.GroupLayout(Principal);
         Principal.setLayout(PrincipalLayout);
         PrincipalLayout.setHorizontalGroup(
             PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 419, Short.MAX_VALUE)
-            .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(PrincipalLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(PrincipalLayout.createSequentialGroup()
-                            .addComponent(jLabel5)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addComponent(ip1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(18, 18, 18)
-                            .addComponent(jLabel4)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(18, 18, 18)
-                            .addComponent(entrar))
-                        .addGroup(PrincipalLayout.createSequentialGroup()
-                            .addComponent(jLabel2)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PrincipalLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(PrincipalLayout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(nome, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(PrincipalLayout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(ip, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(portaServidor, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(entrar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(sair, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(30, Short.MAX_VALUE))
         );
         PrincipalLayout.setVerticalGroup(
             PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 129, Short.MAX_VALUE)
-            .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(PrincipalLayout.createSequentialGroup()
-                    .addGap(35, 35, 35)
-                    .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel5)
-                        .addComponent(ip1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel4)
-                        .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(entrar))
-                    .addGap(18, 18, 18)
-                    .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel2)
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+            .addGroup(PrincipalLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(PrincipalLayout.createSequentialGroup()
+                        .addComponent(entrar)
+                        .addGap(18, 18, 18)
+                        .addComponent(sair))
+                    .addGroup(PrincipalLayout.createSequentialGroup()
+                        .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel5)
+                            .addComponent(ip, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel4)
+                            .addComponent(portaServidor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(PrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel2)
+                            .addComponent(nome, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -162,13 +199,11 @@ public class Cliente extends javax.swing.JFrame {
                         .addComponent(Principal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(188, 188, 188)
-                        .addComponent(jLabel1)))
+                        .addComponent(jLabel1))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(19, 19, 19)
+                        .addComponent(Chat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(20, 20, 20)
-                    .addComponent(Chat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(20, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -177,27 +212,54 @@ public class Cliente extends javax.swing.JFrame {
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(Principal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(135, Short.MAX_VALUE))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(96, 96, 96)
-                    .addComponent(Chat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(97, Short.MAX_VALUE)))
+                .addGap(5, 5, 5)
+                .addComponent(Chat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void EnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_EnviarActionPerformed
+    private void enviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enviarActionPerformed
         // TODO add your handling code here:
         try{
-            String msgout="";
-            msgout = mensagem.getText().trim();
+
+            msgout = nome.getText()+": "+mensagem.getText().trim();
             dout.writeUTF(msgout);
+            mensagem.setText("");
+            dout.flush();
         }catch(Exception e){
-            
+            e.printStackTrace();
         }
-    }//GEN-LAST:event_EnviarActionPerformed
+    }//GEN-LAST:event_enviarActionPerformed
+
+    private void entrarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_entrarMouseClicked
+        // TODO add your handling code here:
+        new RunCliente().start();
+        entrar.setEnabled(false);
+        sair.setEnabled(true);
+        enviar.setEnabled(true);
+        
+        //CONTEUDO
+        ip.setEnabled(false);
+        portaServidor.setEnabled(false);
+        nome.setEnabled(false);
+        mensagem.setEnabled(true);
+    }//GEN-LAST:event_entrarMouseClicked
+
+    private void sairMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_sairMouseClicked
+        // TODO add your handling code here:
+        fecharCliente();
+        entrar.setEnabled(true);
+        sair.setEnabled(false);
+        enviar.setEnabled(false);
+        
+        //CONTEUDO
+        ip.setEnabled(true);
+        portaServidor.setEnabled(true);
+        nome.setEnabled(true);
+        mensagem.setEnabled(false);
+    }//GEN-LAST:event_sairMouseClicked
 
     /**
      * @param args the command line arguments
@@ -227,48 +289,83 @@ public class Cliente extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
+
+        
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new Cliente().setVisible(true);
             }
         });
         
-        try{
-            //SOcket --> ("IP",Porta)
-            s = new Socket("127.0.0.1",1120);
-
-            din = new DataInputStream(s.getInputStream());
-            dout = new DataOutputStream(s.getOutputStream());
-
-            //BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
-            String msgin="";
-
-            while(!msgin.equals("end")){
-                msgin = din.readUTF();
-                conversa.setText("EU:\t"+msgin);
-            }
-            s.close();
-        }catch(Exception e){
-
-        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel Chat;
-    private javax.swing.JButton Enviar;
     private javax.swing.JPanel Principal;
     private javax.swing.JLabel bemvindo;
     private static javax.swing.JTextArea conversa;
     private javax.swing.JButton entrar;
-    private javax.swing.JTextField ip1;
+    private javax.swing.JButton enviar;
+    private static javax.swing.JTextField ip;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField mensagem;
+    private javax.swing.JTextField nome;
+    private static javax.swing.JTextField portaServidor;
+    private javax.swing.JButton sair;
     // End of variables declaration//GEN-END:variables
+
+    private void iniciarCliente(){
+        try{
+            //Socket --> ("IP",Porta)
+            s = new Socket(ip.getText(),Integer.parseInt(portaServidor.getText()));
+            //din = new DataInputStream(s.getInputStream());
+            dout = new DataOutputStream(s.getOutputStream());
+            
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    private void fecharCliente(){
+        /*  
+        Principal a = new Principal();
+        
+        for(int i=0; i<a.arClientes.size();i++){
+            if(a.arClientes.get(i).getId()==THREAD){
+                a.arClientes.remove(i);
+            }
+        }
+        */
+        try{
+            dout.writeUTF("CLIENTE ENCERRADO COM SUCESSO");
+            dout.flush();
+            conversa.setText("CLIENTE ENCERRADO COM SUCESSO");
+            dout.writeUTF("end");
+            //dout.flush();
+            if (dout != null) {
+                dout.close();
+            }
+            /*
+            if (din != null) {
+                din.close();
+            }
+            */
+            if (s != null) {
+                s.close();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }       
+    }
+    
+    class RunCliente extends Thread {
+        public void run() {
+            iniciarCliente();
+            this.setName(nome.getText());
+        }
+    }
 }

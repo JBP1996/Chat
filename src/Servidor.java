@@ -2,6 +2,8 @@
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -20,12 +22,16 @@ public class Servidor extends javax.swing.JFrame {
     /**
      * Creates new form Servidor
      */
-    static ServerSocket ss;
-    static Socket s;
-    static DataInputStream din;
-    static DataOutputStream dout;
+    ServerSocket serverSocket;
+    Socket socket;
+    DataInputStream din;
+    DataOutputStream dout;
+    InputStream inStr;
+    String msgin=null,msgout=null;
     public Servidor(){
         initComponents();
+        iniciar.setEnabled(true);
+        parar.setEnabled(false);
     }
 
     /**
@@ -41,7 +47,7 @@ public class Servidor extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         ip = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        porta = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         conexao = new javax.swing.JTextArea();
         jLabel4 = new javax.swing.JLabel();
@@ -54,17 +60,32 @@ public class Servidor extends javax.swing.JFrame {
 
         jLabel2.setText("IP:");
 
+        ip.setEnabled(false);
+
         jLabel3.setText("Porta:");
+
+        porta.setText("5000");
 
         conexao.setColumns(20);
         conexao.setRows(5);
+        conexao.setEnabled(false);
         jScrollPane1.setViewportView(conexao);
 
         jLabel4.setText("Conexao");
 
         iniciar.setText("Iniciar");
+        iniciar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                iniciarMouseClicked(evt);
+            }
+        });
 
         parar.setText("Parar");
+        parar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                pararMouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -72,14 +93,15 @@ public class Servidor extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(174, 174, 174)
-                                .addComponent(jLabel1))
-                            .addGroup(layout.createSequentialGroup()
                                 .addContainerGap()
                                 .addComponent(jLabel4))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(174, 174, 174)
+                                .addComponent(jLabel1))
                             .addGroup(layout.createSequentialGroup()
                                 .addContainerGap()
                                 .addComponent(jLabel2)
@@ -88,13 +110,12 @@ public class Servidor extends javax.swing.JFrame {
                                 .addGap(18, 18, 18)
                                 .addComponent(jLabel3)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
+                                .addComponent(porta, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(iniciar)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(parar)))
-                        .addGap(0, 24, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addGap(0, 8, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -107,18 +128,30 @@ public class Servidor extends javax.swing.JFrame {
                     .addComponent(jLabel2)
                     .addComponent(ip, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(porta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(iniciar)
                     .addComponent(parar))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 180, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void iniciarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_iniciarMouseClicked
+        // TODO add your handling code here:
+        new RunServer().start();
+        iniciar.setEnabled(false);
+        parar.setEnabled(true);
+    }//GEN-LAST:event_iniciarMouseClicked
+
+    private void pararMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pararMouseClicked
+        // TODO add your handling code here:
+        fecharServidor();
+    }//GEN-LAST:event_pararMouseClicked
 
     /**
      * @param args the command line arguments
@@ -153,34 +186,7 @@ public class Servidor extends javax.swing.JFrame {
                 new Servidor().setVisible(true);
             }       
         });
-        
-        String msgin="",msgout="";
-        
-        try{
-            ss = new ServerSocket(1201); // porta do Servidor
-            s = ss.accept();
-
-            din = new DataInputStream(s.getInputStream());
-            dout = new DataOutputStream(s.getOutputStream());
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
             
-
-            while(!msgin.equals("end")){
-                msgin = din.readUTF();
-                conexao.setText(conexao.getText()+"\n"+msgin);
-                
-                /*
-                msgout = br.readLine();
-                dout.writeUTF(msgout);
-                dout.flush();
-                */
-            }
-            s.close();
-        }catch(Exception e){
-
-        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -192,7 +198,61 @@ public class Servidor extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextField jTextField1;
     private javax.swing.JButton parar;
+    private static javax.swing.JTextField porta;
     // End of variables declaration//GEN-END:variables
+    
+    private void iniciarServidor(){
+        conexao.setText("SERVIDOR INICIADO COM SUCESSO");
+        try{
+            serverSocket = new ServerSocket(Integer.parseInt(porta.getText())); // porta do Servidor
+            socket = serverSocket.accept();
+            
+            din = new DataInputStream(socket.getInputStream());
+            dout = new DataOutputStream(socket.getOutputStream());
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+            String msgin="";
+            String msgout="";
+                        
+            while(!msgin.equals("end")){
+                msgin = din.readUTF();
+                conexao.setText(conexao.getText().trim()+"\n"+msgin);
+            }
+                      
+           // FECHAR SERVIDOR
+           fecharServidor();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    private void fecharServidor(){
+        try {
+            
+            if (dout != null) {
+                dout.close();
+            }
+            if (din != null) {
+                din.close();
+            }else{
+                while(din.available()>0) {
+                    String value = din.readUTF();
+                }
+            }
+            if (socket != null) {
+                socket.close();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+ 
+    class RunServer extends Thread {
+        public void run() {
+            iniciarServidor();
+        }
+    }
+    
 }
