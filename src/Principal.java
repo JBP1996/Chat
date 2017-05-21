@@ -13,15 +13,15 @@ import java.util.ArrayList;
  */
 public class Principal extends javax.swing.JFrame {
     Servidor ser = new Servidor();
-    //Cliente cli = new Cliente();
-    ArrayList<Thread> arClientes;
+    Cliente cli;
     
+    public ArrayList<Cliente> arClientes;
     /**
      * Creates new form Principal
      */
     public Principal() {
         initComponents();
-        arClientes = new ArrayList<Thread>();
+        arClientes = new ArrayList<Cliente>();
     }
 
     /**
@@ -83,7 +83,9 @@ public class Principal extends javax.swing.JFrame {
 
     private void clientebtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_clientebtnMouseClicked
         // TODO add your handling code here:
-        new RunNovoCliente().start();
+            cli = new Cliente();
+            cli.setVisible(true);
+            arClientes.add(cli);
     }//GEN-LAST:event_clientebtnMouseClicked
 
     /**
@@ -125,12 +127,5 @@ public class Principal extends javax.swing.JFrame {
     private javax.swing.JButton clientebtn;
     private javax.swing.JButton servidorbtn;
     // End of variables declaration//GEN-END:variables
-
-    class RunNovoCliente extends Thread {
-        public void run() {
-            new Cliente().setVisible(true);
-            arClientes.add(this);
-            Cliente.THREAD = this.getId();
-        }
-    }
+ 
 }

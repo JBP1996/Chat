@@ -7,7 +7,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -22,16 +24,19 @@ public class Servidor extends javax.swing.JFrame {
     /**
      * Creates new form Servidor
      */
+
     ServerSocket serverSocket;
     Socket socket;
     DataInputStream din;
     DataOutputStream dout;
-    InputStream inStr;
+    InputStream inp;
     String msgin=null,msgout=null;
+    ArrayList arClientes;
     public Servidor(){
         initComponents();
         iniciar.setEnabled(true);
         parar.setEnabled(false);
+        arClientes = new ArrayList();
     }
 
     /**
@@ -202,35 +207,68 @@ public class Servidor extends javax.swing.JFrame {
     private static javax.swing.JTextField porta;
     // End of variables declaration//GEN-END:variables
     
-    private void iniciarServidor(){
+    public void iniciarServidor(){
         conexao.setText("SERVIDOR INICIADO COM SUCESSO");
+  
+        Socket sockete;
         try{
-            serverSocket = new ServerSocket(Integer.parseInt(porta.getText())); // porta do Servidor
-            socket = serverSocket.accept();
-            
-            din = new DataInputStream(socket.getInputStream());
-            dout = new DataOutputStream(socket.getOutputStream());
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
-            String msgin="";
-            String msgout="";
-                        
-            while(!msgin.equals("end")){
-                msgin = din.readUTF();
-                conexao.setText(conexao.getText().trim()+"\n"+msgin);
-            }
-                      
-           // FECHAR SERVIDOR
-           fecharServidor();
+            sockete = serverSocket.accept();
+            new RunNovoCliente(sockete).start();
         }catch(Exception e){
             e.printStackTrace();
         }
+        
+
     }
     
     private void fecharServidor(){
         try {
+            conexao.setText(conexao.getText().trim()+"\n"+"SERVIDOR IRÁ ENCERRAR");
+            if (dout != null) {
+                dout.close();
+            }
+            if (din != null) {
+                din.close();
+            }
+            if (socket != null) {
+                socket.close();
+            }
+            RunServer.sleep(3000);
+            System.exit(0);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (InterruptedException ex) {
+            System.out.println("ERRO NO SLEEP");
+            ex.printStackTrace();
+        }
+    }
+
+    private void conexaoT(Socket so){
+        DataInputStream dinc;
+        DataOutputStream doutc;
+        try{
+            dinc = new DataInputStream(so.getInputStream());
+            doutc = new DataOutputStream(so.getOutputStream());
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             
+            String msgin="";
+            String msgout="";
+
+            while(!msgin.equals("end")){
+                msgin = dinc.readUTF();
+                conexao.setText(conexao.getText().trim()+"\n"+msgin);
+            }
+            fecharServidor();
+        }catch(Exception e){
+            e.printStackTrace();
+        }  
+        
+    }
+    
+    private void fecharSocket(){
+        try {
+            conexao.setText(conexao.getText().trim()+"\n"+"SOCKET IRÁ ENCERRAR");
             if (dout != null) {
                 dout.close();
             }
@@ -248,9 +286,29 @@ public class Servidor extends javax.swing.JFrame {
             ex.printStackTrace();
         }
     }
- 
+    
+    class RunNovoCliente extends Thread{
+        Socket so;
+        private RunNovoCliente(Socket sockett) {
+            so =sockett;
+        }
+        public void run(){
+            arClientes.add(this.getId());
+            for(int i=0;i<arClientes.size();i++){
+                System.out.println("ID THREAD: "+arClientes.get(i));
+            }
+            conexaoT(so);
+            fecharSocket();
+        }
+    }
+    
     class RunServer extends Thread {
         public void run() {
+            try {
+                serverSocket = new ServerSocket(Integer.parseInt(porta.getText()));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
             iniciarServidor();
         }
     }

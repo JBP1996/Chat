@@ -5,8 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -22,7 +20,7 @@ public class Cliente extends javax.swing.JFrame {
     /**
      * Creates new form Cliente
      */
-    public static long THREAD;
+    
     static Socket s ;
     //static DataInputStream din;
     static DataOutputStream dout;
@@ -222,15 +220,7 @@ public class Cliente extends javax.swing.JFrame {
 
     private void enviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enviarActionPerformed
         // TODO add your handling code here:
-        try{
-
-            msgout = nome.getText()+": "+mensagem.getText().trim();
-            dout.writeUTF(msgout);
-            mensagem.setText("");
-            dout.flush();
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+        enviarMensagem();
     }//GEN-LAST:event_enviarActionPerformed
 
     private void entrarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_entrarMouseClicked
@@ -319,27 +309,21 @@ public class Cliente extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     private void iniciarCliente(){
+        Socket soc;
         try{
             //Socket --> ("IP",Porta)
-            s = new Socket(ip.getText(),Integer.parseInt(portaServidor.getText()));
+            soc = new Socket(ip.getText(),Integer.parseInt(portaServidor.getText()));
             //din = new DataInputStream(s.getInputStream());
-            dout = new DataOutputStream(s.getOutputStream());
-            
+            dout = new DataOutputStream(soc.getOutputStream());
+            //enviarMensagem();
+            s=soc;
         }catch(Exception e){
             e.printStackTrace();
         }
     }
     
     private void fecharCliente(){
-        /*  
-        Principal a = new Principal();
-        
-        for(int i=0; i<a.arClientes.size();i++){
-            if(a.arClientes.get(i).getId()==THREAD){
-                a.arClientes.remove(i);
-            }
-        }
-        */
+
         try{
             dout.writeUTF("CLIENTE ENCERRADO COM SUCESSO");
             dout.flush();
@@ -359,13 +343,24 @@ public class Cliente extends javax.swing.JFrame {
             }
         }catch(Exception e){
             e.printStackTrace();
-        }       
+        }
+    }
+    
+    private void enviarMensagem(){
+        try{
+            msgout = nome.getText()+": "+mensagem.getText().trim();
+            dout.writeUTF(msgout);
+            mensagem.setText("");
+            dout.flush();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
     
     class RunCliente extends Thread {
         public void run() {
             iniciarCliente();
-            this.setName(nome.getText());
         }
     }
+    
 }
